@@ -1,14 +1,15 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  webpack: (config) => {
-    config.resolve.alias.canvas = false
-    config.resolve.alias.encoding = false
-    return config
-  },
   experimental: {
     serverActions: {
       bodySizeLimit: '10mb',
+    },
+  },
+  turbopack: {
+    resolveAlias: {
+      canvas: { browser: './empty.js' },
+      encoding: { browser: './empty.js' },
     },
   },
 }
