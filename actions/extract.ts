@@ -55,7 +55,8 @@ export async function extractProducts(
       const text = message.content[0].type === 'text' ? message.content[0].text : '[]'
 
       try {
-        const parsed = JSON.parse(text) as Product[]
+        const cleaned = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
+        const parsed = JSON.parse(cleaned) as Product[]
         const withPage = parsed.map((p, i) => ({
           ...p,
           id: `page${pageNumber}-prod${i + 1}`,

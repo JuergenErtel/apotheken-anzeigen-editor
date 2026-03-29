@@ -6,6 +6,11 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '10mb',
     },
   },
+  webpack: (config) => {
+    config.resolve.alias.canvas = false
+    config.resolve.alias.encoding = false
+    return config
+  },
   turbopack: {
     resolveAlias: {
       canvas: { browser: './empty.js' },

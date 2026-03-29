@@ -1,6 +1,6 @@
 'use server'
 
-import { loadSession, saveGeneratedPdf } from '@/lib/blob'
+import { loadSession, saveGeneratedPdf, saveSession } from '@/lib/blob'
 import { applyProductReplacements } from '@/lib/pdf-generate'
 
 export async function generatePdf(
@@ -25,6 +25,10 @@ export async function generatePdf(
     )
 
     const generatedPdfUrl = await saveGeneratedPdf(sessionId, newPdfBytes)
+
+    // generatedPdfUrl in Session speichern für spätere Wiederherstellung
+    session.generatedPdfUrl = generatedPdfUrl
+    await saveSession(session)
 
     return { success: true, generatedPdfUrl }
   } catch (e) {

@@ -72,8 +72,9 @@ export function EditorContent() {
         setPages(renderedPages)
       } catch {
         toast.error('PDF-Vorschau konnte nicht geladen werden.')
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
     })
   }, [sessionId, products.length, router, setSession, setProducts, setPages])
 

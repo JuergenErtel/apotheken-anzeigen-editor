@@ -19,7 +19,7 @@ export function DownloadContent() {
   const sessionId = searchParams.get('session')
   const { originalPdfUrl, generatedPdfUrl } = useAppStore()
   const [origUrl, setOrigUrl] = useState(originalPdfUrl)
-  const [genUrl] = useState(generatedPdfUrl)
+  const [genUrl, setGenUrl] = useState(generatedPdfUrl)
   const [loading, setLoading] = useState(!originalPdfUrl || !generatedPdfUrl)
 
   useEffect(() => {
@@ -33,6 +33,9 @@ export function DownloadContent() {
         return
       }
       setOrigUrl(result.session.pdfBlobUrl)
+      if (result.session.generatedPdfUrl) {
+        setGenUrl(result.session.generatedPdfUrl)
+      }
       setLoading(false)
     })
   }, [sessionId, origUrl, genUrl, router])
@@ -45,10 +48,24 @@ export function DownloadContent() {
     a.click()
   }
 
-  if (loading || !origUrl || !genUrl) {
+  if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Spinner size="lg" />
+      </div>
+    )
+  }
+
+  if (!origUrl || !genUrl) {
+    return (
+      <div className="flex h-screen items-center justify-center flex-col gap-4">
+        <p className="text-gray-600">Generiertes PDF nicht gefunden.</p>
+        <button
+          onClick={() => router.push(`/editor?session=${sessionId}`)}
+          className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+        >
+          Zurück zum Editor
+        </button>
       </div>
     )
   }

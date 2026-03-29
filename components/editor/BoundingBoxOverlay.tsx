@@ -103,18 +103,20 @@ export function BoundingBoxOverlay({
         newBox.y = Math.max(0, Math.min(100 - startBox.height, startBox.y + dy))
       } else {
         if (handle.includes('e')) {
-          newBox.width = Math.max(5, startBox.width + dx)
+          newBox.width = Math.max(5, Math.min(100 - startBox.x, startBox.width + dx))
         }
         if (handle.includes('s')) {
-          newBox.height = Math.max(5, startBox.height + dy)
+          newBox.height = Math.max(5, Math.min(100 - startBox.y, startBox.height + dy))
         }
         if (handle.includes('w')) {
-          newBox.x = startBox.x + dx
-          newBox.width = Math.max(5, startBox.width - dx)
+          const newX = Math.max(0, startBox.x + dx)
+          newBox.x = newX
+          newBox.width = Math.max(5, (startBox.x + startBox.width) - newX)
         }
         if (handle.includes('n')) {
-          newBox.y = startBox.y + dy
-          newBox.height = Math.max(5, startBox.height - dy)
+          const newY = Math.max(0, startBox.y + dy)
+          newBox.y = newY
+          newBox.height = Math.max(5, (startBox.y + startBox.height) - newY)
         }
       }
 

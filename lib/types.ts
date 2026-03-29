@@ -32,6 +32,7 @@ export interface SessionData {
   products: Product[]
   edits: Record<string, ProductEdit>
   createdAt: string
+  generatedPdfUrl?: string
 }
 
 export interface PageImage {
