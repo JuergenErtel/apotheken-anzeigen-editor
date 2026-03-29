@@ -16,6 +16,7 @@ export async function uploadPdfToBlob(
   const blob = await put(pdfKey(sessionId), pdfBuffer, {
     access: 'public',
     contentType: 'application/pdf',
+    addRandomSuffix: false,
   })
   return blob.url
 }
