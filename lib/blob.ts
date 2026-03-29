@@ -17,6 +17,7 @@ export async function uploadPdfToBlob(
     access: 'public',
     contentType: 'application/pdf',
     addRandomSuffix: false,
+    allowOverwrite: true,
   })
   return blob.url
 }
@@ -26,6 +27,7 @@ export async function saveSession(sessionData: SessionData): Promise<void> {
     access: 'public',
     contentType: 'application/json',
     addRandomSuffix: false,
+    allowOverwrite: true,
   })
 }
 
@@ -50,7 +52,7 @@ export async function saveGeneratedPdf(
   const blob = await put(
     `sessions/${sessionId}/generated.pdf`,
     Buffer.from(pdfBytes),
-    { access: 'public', contentType: 'application/pdf', addRandomSuffix: false }
+    { access: 'public', contentType: 'application/pdf', addRandomSuffix: false, allowOverwrite: true }
   )
   return blob.url
 }
