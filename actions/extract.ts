@@ -82,7 +82,8 @@ export async function extractProducts(
 
     return { success: true, products: allProducts }
   } catch (e) {
-    console.error('extractProducts error:', e)
-    return { success: false, error: 'Extraktion fehlgeschlagen. Bitte erneut versuchen.' }
+    const msg = e instanceof Error ? e.message : String(e)
+    console.error('extractProducts error:', msg)
+    return { success: false, error: `Extraktion fehlgeschlagen: ${msg}` }
   }
 }
