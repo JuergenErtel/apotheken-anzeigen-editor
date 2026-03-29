@@ -1,0 +1,6 @@
+{
+  "functions": {
+    "app/editor/**": { "maxDuration": 60 },
+    "actions/extract.ts": { "maxDuration": 120 }
+  }
+}

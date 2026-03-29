@@ -96,7 +96,7 @@ export function BoundingBoxOverlay({
       const dx = toPercent(e.clientX - startX, 'x')
       const dy = toPercent(e.clientY - startY, 'y')
 
-      let newBox = { ...startBox }
+      const newBox = { ...startBox }
 
       if (handle === 'move') {
         newBox.x = Math.max(0, Math.min(100 - startBox.width, startBox.x + dx))

@@ -19,11 +19,11 @@ export function DownloadContent() {
   const sessionId = searchParams.get('session')
   const { originalPdfUrl, generatedPdfUrl } = useAppStore()
   const [origUrl, setOrigUrl] = useState(originalPdfUrl)
-  const [genUrl, setGenUrl] = useState(generatedPdfUrl)
+  const [genUrl] = useState(generatedPdfUrl)
   const [loading, setLoading] = useState(!originalPdfUrl || !generatedPdfUrl)
 
   useEffect(() => {
-    if (origUrl && genUrl) { setLoading(false); return }
+    if (origUrl && genUrl) { return }
     if (!sessionId) { router.push('/'); return }
 
     loadSession(sessionId).then((result) => {

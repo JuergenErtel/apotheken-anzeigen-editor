@@ -54,10 +54,12 @@ export function PdfComparison({ originalUrl, generatedUrl }: PdfComparisonProps)
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <div className="mb-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">Original</div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={orig.dataUrl} alt={`Original Seite ${orig.pageNumber}`} className="w-full rounded shadow" />
               </div>
               <div>
                 <div className="mb-1 text-xs font-semibold text-blue-500 uppercase tracking-wide">Neu</div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={gen?.dataUrl} alt={`Neu Seite ${orig.pageNumber}`} className="w-full rounded shadow ring-2 ring-blue-400" />
               </div>
             </div>
