@@ -117,6 +117,9 @@ export function UploadContent() {
         <p className="mt-6 text-center text-xs text-gray-400">
           Unterstützt mehrseitige PDF-Dateien · Maximale Dateigröße: 10 MB
         </p>
+        <p className="mt-2 text-center text-xs text-gray-400">
+          Dies ist ein Produkt der Coding Brothers UG
+        </p>
       </div>
     </main>
   )
