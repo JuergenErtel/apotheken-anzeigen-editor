@@ -1,7 +1,3 @@
 {
-  "functions": {
-    "app/editor/EditorContent.tsx": { "maxDuration": 60 },
-    "actions/extract.ts": { "maxDuration": 120 },
-    "actions/generate.ts": { "maxDuration": 60 }
-  }
+  "framework": "nextjs"
 }

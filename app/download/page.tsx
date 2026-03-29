@@ -1,4 +1,6 @@
 import { Suspense } from 'react'
+
+export const maxDuration = 60
 import { DownloadContent } from './DownloadContent'
 import { Spinner } from '@/components/ui/Spinner'
 
