@@ -140,8 +140,8 @@ export async function applyProductReplacements(
           width: imgRect.width,
           height: imgRect.height,
         })
-      } catch {
-        // Bild-Einbettung ignorieren wenn fehlerhaft
+      } catch (imgErr) {
+        console.error('Bild-Einbettung fehlgeschlagen:', imgErr)
       }
     }
 

@@ -113,7 +113,7 @@ export function EditorContent() {
   const handleGenerate = async () => {
     if (!sessionId) return
     setGenerating(true)
-    const result = await generatePdf(sessionId)
+    const result = await generatePdf(sessionId, products, edits)
     setGenerating(false)
     if (!result.success) {
       toast.error(result.error)
