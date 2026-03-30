@@ -11,10 +11,58 @@ export interface NativeTextItem {
   color: { r: number; g: number; b: number }
 }
 
+/** Minimales DOMMatrix-Polyfill für pdfjs in Node.js (Vercel/Server Actions). */
+function polyfillDOMMatrix() {
+  if (typeof globalThis.DOMMatrix !== 'undefined') return
+  class DOMMatrixPolyfill {
+    a = 1; b = 0; c = 0; d = 1; e = 0; f = 0
+    m11 = 1; m12 = 0; m13 = 0; m14 = 0
+    m21 = 0; m22 = 1; m23 = 0; m24 = 0
+    m31 = 0; m32 = 0; m33 = 1; m34 = 0
+    m41 = 0; m42 = 0; m43 = 0; m44 = 1
+    is2D = true; isIdentity = true
+    constructor(init?: number[] | string) {
+      if (Array.isArray(init) && init.length === 6) {
+        [this.a, this.b, this.c, this.d, this.e, this.f] = init
+        this.m11 = init[0]; this.m12 = init[1]
+        this.m21 = init[2]; this.m22 = init[3]
+        this.m41 = init[4]; this.m42 = init[5]
+      }
+    }
+    multiply(o: DOMMatrixPolyfill): DOMMatrixPolyfill {
+      return new DOMMatrixPolyfill([
+        this.a * o.a + this.c * o.b, this.b * o.a + this.d * o.b,
+        this.a * o.c + this.c * o.d, this.b * o.c + this.d * o.d,
+        this.a * o.e + this.c * o.f + this.e, this.b * o.e + this.d * o.f + this.f,
+      ])
+    }
+    translate(tx: number, ty: number): DOMMatrixPolyfill {
+      return new DOMMatrixPolyfill([this.a, this.b, this.c, this.d, this.e + tx * this.a + ty * this.c, this.f + tx * this.b + ty * this.d])
+    }
+    scale(sx: number, sy?: number): DOMMatrixPolyfill {
+      const sY = sy ?? sx
+      return new DOMMatrixPolyfill([this.a * sx, this.b * sx, this.c * sY, this.d * sY, this.e, this.f])
+    }
+    inverse(): DOMMatrixPolyfill {
+      const det = this.a * this.d - this.b * this.c
+      if (det === 0) return new DOMMatrixPolyfill()
+      return new DOMMatrixPolyfill([
+        this.d / det, -this.b / det, -this.c / det, this.a / det,
+        (this.c * this.f - this.d * this.e) / det, (this.b * this.e - this.a * this.f) / det,
+      ])
+    }
+    transformPoint(p: { x?: number; y?: number } = {}) {
+      return { x: (p.x ?? 0) * this.a + (p.y ?? 0) * this.c + this.e, y: (p.x ?? 0) * this.b + (p.y ?? 0) * this.d + this.f, z: 0, w: 1 }
+    }
+  }
+  ;(globalThis as Record<string, unknown>).DOMMatrix = DOMMatrixPolyfill
+}
+
 export async function extractNativeTextItems(
   pdfBytes: ArrayBuffer,
   pageNumber: number
 ): Promise<NativeTextItem[]> {
+  polyfillDOMMatrix()
   const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs')
   // In Node.js (Server Actions, Jest), pdfjs uses a fake/inline worker.
   const workerPath = require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs')
