@@ -13,7 +13,7 @@ export interface NativeTextItem {
 
 /** Resolve actual font name from pdfjs commonObjs (populated after getOperatorList). */
 async function resolveFontName(
-  commonObjs: { get: (key: string, cb: (data: unknown) => void) => void; has: (key: string) => boolean },
+  commonObjs: { get: (key: string, cb: (data: unknown) => void) => void },
   fontRef: string
 ): Promise<string> {
   return new Promise(resolve => {
@@ -39,7 +39,12 @@ export async function extractNativeTextItems(
   const workerPath = require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs')
   pdfjs.GlobalWorkerOptions.workerSrc = workerPath
 
-  const loadingTask = pdfjs.getDocument({ data: new Uint8Array(pdfBytes) })
+  const path = require('path')
+  const standardFontDataUrl = path.join(require.resolve('pdfjs-dist/package.json'), '..', 'standard_fonts') + '/'
+  const loadingTask = pdfjs.getDocument({
+    data: new Uint8Array(pdfBytes),
+    standardFontDataUrl,
+  })
   const pdf = await loadingTask.promise
   const page = await pdf.getPage(pageNumber)
   const { width: pageWidth, height: pageHeight } = page.getViewport({ scale: 1 })
@@ -51,7 +56,7 @@ export async function extractNativeTextItems(
   if (content.items.length === 0) return []
 
   // Pre-resolve all unique font names from commonObjs.
-  const commonObjs = (page as unknown as { commonObjs: { get: (key: string, cb: (data: unknown) => void) => void; has: (key: string) => boolean } }).commonObjs
+  const commonObjs = (page as unknown as { commonObjs: { get: (key: string, cb: (data: unknown) => void) => void } }).commonObjs
   const uniqueFontRefs = new Set<string>()
   for (const raw of content.items) {
     if ('str' in raw && raw.str.trim() && 'fontName' in raw) {

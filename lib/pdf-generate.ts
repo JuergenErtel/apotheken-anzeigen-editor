@@ -98,13 +98,25 @@ export async function applyProductReplacements(
     const position = edit.position ?? product.position
     const rect = convertBoundingBox(position, pageWidth, pageHeight)
 
+    // Union mit imagePosition damit das Deckweiß auch das Bild abdeckt
+    let coverRect = rect
+    if (product.imagePosition) {
+      const imgCover = convertBoundingBox(product.imagePosition, pageWidth, pageHeight)
+      coverRect = {
+        x: Math.min(rect.x, imgCover.x),
+        y: Math.min(rect.y, imgCover.y),
+        width: Math.max(rect.x + rect.width, imgCover.x + imgCover.width) - Math.min(rect.x, imgCover.x),
+        height: Math.max(rect.y + rect.height, imgCover.y + imgCover.height) - Math.min(rect.y, imgCover.y),
+      }
+    }
+
     // 1. Weißes Rechteck über Original
     const coverMargin = 4
     page.drawRectangle({
-      x: rect.x - coverMargin,
-      y: rect.y - coverMargin,
-      width: rect.width + coverMargin * 2,
-      height: rect.height + coverMargin * 2,
+      x: coverRect.x - coverMargin,
+      y: coverRect.y - coverMargin,
+      width: coverRect.width + coverMargin * 2,
+      height: coverRect.height + coverMargin * 2,
       color: rgb(1, 1, 1),
       borderWidth: 0,
     })
