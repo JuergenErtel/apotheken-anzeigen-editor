@@ -98,25 +98,24 @@ export async function applyProductReplacements(
     const position = edit.position ?? product.position
     const rect = convertBoundingBox(position, pageWidth, pageHeight)
 
-    // Alle bekannten Positionen (Textelemente + Bild) in pdf-lib-Koordinaten
-    const allRects = [
+    // Deckweiß-Fläche: product.position (bereits Bounding-Box aller Text- und Bildelemente)
+    // plus explizit alle Textelemente, um sicherzugehen dass nichts ausserhalb liegt
+    const coverRects = [
       rect,
-      product.imagePosition ? convertBoundingBox(product.imagePosition, pageWidth, pageHeight) : null,
       product.nameElement ? convertBoundingBox(product.nameElement.position, pageWidth, pageHeight) : null,
       product.descriptionElement ? convertBoundingBox(product.descriptionElement.position, pageWidth, pageHeight) : null,
       product.priceElement ? convertBoundingBox(product.priceElement.position, pageWidth, pageHeight) : null,
       product.salePriceElement ? convertBoundingBox(product.salePriceElement.position, pageWidth, pageHeight) : null,
     ].filter((r): r is PdfRect => r !== null)
 
-    // Umschließendes Rechteck aller Positionen
     const coverRect: PdfRect = {
-      x: Math.min(...allRects.map(r => r.x)),
-      y: Math.min(...allRects.map(r => r.y)),
+      x: Math.min(...coverRects.map(r => r.x)),
+      y: Math.min(...coverRects.map(r => r.y)),
       width: 0,
       height: 0,
     }
-    coverRect.width = Math.max(...allRects.map(r => r.x + r.width)) - coverRect.x
-    coverRect.height = Math.max(...allRects.map(r => r.y + r.height)) - coverRect.y
+    coverRect.width = Math.max(...coverRects.map(r => r.x + r.width)) - coverRect.x
+    coverRect.height = Math.max(...coverRects.map(r => r.y + r.height)) - coverRect.y
 
     // 1. Weißes Rechteck über Original
     const coverMargin = 6
@@ -129,10 +128,9 @@ export async function applyProductReplacements(
       borderWidth: 0,
     })
 
-    // 2. Ersatzbild einbetten — füllt die volle imagePosition-Box
-    if (edit.replacementImage) {
-      const imgPos = product.imagePosition ?? product.position
-      const imgRect = convertBoundingBox(imgPos, pageWidth, pageHeight)
+    // 2. Ersatzbild einbetten — nur wenn imagePosition von Claude gesetzt wurde
+    if (edit.replacementImage && product.imagePosition) {
+      const imgRect = convertBoundingBox(product.imagePosition, pageWidth, pageHeight)
       try {
         const sharp = (await import('sharp')).default
         const base64Data = edit.replacementImage.replace(/^data:image\/\w+;base64,/, '')
