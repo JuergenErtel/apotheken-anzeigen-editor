@@ -64,9 +64,12 @@ export async function extractNativeTextItems(
 ): Promise<NativeTextItem[]> {
   polyfillDOMMatrix()
   const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs')
-  // pdfjs v5 erwartet eine URL (nicht einen Dateipfad) für workerSrc.
+  // require.resolve() wird von webpack zur Build-Zeit durch eine Modul-ID (number) ersetzt.
+  // eval('require') erzwingt Runtime-Auflösung → gibt echten Dateipfad zurück.
+  // eslint-disable-next-line no-eval
+  const runtimeRequire = eval('require') as NodeRequire
   const { pathToFileURL } = await import('url')
-  const workerPath = require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs')
+  const workerPath = runtimeRequire.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs')
   pdfjs.GlobalWorkerOptions.workerSrc = pathToFileURL(workerPath).href
 
   const path = require('path')
