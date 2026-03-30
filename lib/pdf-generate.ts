@@ -136,7 +136,13 @@ export async function applyProductReplacements(
     // 3. Text: exakte TextElement-Boxen wenn vorhanden, sonst Fallback
     const name = edit.name ?? product.name
     const description = edit.description ?? product.description
-    const price = edit.salePrice ?? edit.price ?? product.salePrice ?? product.price
+
+    // For the TextElement path: split original price and sale price
+    const originalPrice = edit.price ?? product.price
+    const salePrice = edit.salePrice ?? product.salePrice
+
+    // For the fallback path (keep using the combined logic):
+    const fallbackPrice = edit.salePrice ?? edit.price ?? product.salePrice ?? product.price
 
     const hasTextElements = !!(product.nameElement || product.descriptionElement || product.priceElement)
 
@@ -147,12 +153,11 @@ export async function applyProductReplacements(
       if (product.descriptionElement && description) {
         drawTextElement(page, description, product.descriptionElement, fonts, pageWidth, pageHeight)
       }
-      if (product.priceElement && price) {
-        drawTextElement(page, price, product.priceElement, fonts, pageWidth, pageHeight)
+      if (product.priceElement && originalPrice) {
+        drawTextElement(page, originalPrice, product.priceElement, fonts, pageWidth, pageHeight)
       }
-      if (product.salePriceElement && product.salePrice) {
-        const sp = edit.salePrice ?? product.salePrice
-        drawTextElement(page, sp, product.salePriceElement, fonts, pageWidth, pageHeight)
+      if (product.salePriceElement && salePrice) {
+        drawTextElement(page, salePrice, product.salePriceElement, fonts, pageWidth, pageHeight)
       }
     } else {
       // Fallback für ältere Sessions ohne TextElements
@@ -161,7 +166,7 @@ export async function applyProductReplacements(
       const textColor = product.textColor ?? { r: 0, g: 0, b: 0 }
       drawTextBlockFallback(
         page,
-        [name, description, price].filter(Boolean),
+        [name, description, fallbackPrice].filter(Boolean),
         rect,
         font,
         maxFontSize,
