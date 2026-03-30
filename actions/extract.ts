@@ -19,15 +19,24 @@ interface ClaudeProduct {
 
 function buildExtractionPrompt(textItemsJson: string): string {
   return `Du analysierst eine Seite eines Apotheken-Werbeflyers.
-Dir werden alle Textelemente der Seite als JSON gegeben — mit exakten Koordinaten aus der PDF-Struktur.
+Dir werden alle Textelemente der Seite als JSON gegeben — mit exakten Koordinaten (x, y, width, height in % der Seite, Ursprung oben-links).
 
 Textelemente:
 ${textItemsJson}
 
 Gruppiere die Textelemente zu Produkten. Für jedes Produkt:
-- Wähle die Element-IDs für Produktname, Beschreibung, Preis und Aktionspreis (falls vorhanden)
-- Schätze die Bildfläche (x, y, width, height in % der Seite) — wo ist das Produktfoto?
-- Erkenne die Textfarbe aus dem Bild
+- nameElementId: ID des Produktnamens (z.B. "Ibuprofen 400mg") — typisch größere Schrift, fett
+- descriptionElementId: ID der Beschreibung (Packungsgröße, Wirkstoff etc.)
+- priceElementId: ID des Hauptpreises (z.B. "14,25" oder "14,25 €") — meist die größte Preiszahl
+- salePriceElementId: ID des Streichpreises (z.B. "statt 19,99") — nur wenn vorhanden, sonst null
+- imageArea: Schätze wo das Produktfoto ist (x, y, width, height in % der Seite)
+- textColor: Textfarbe erkennbar aus dem Bild
+
+WICHTIG:
+- Weise jedem Produkt nur Element-IDs zu, die räumlich IN der Produktfläche liegen
+- Fußzeilen, Seitenüberschriften und Hinweistexte sind KEINE Produkte
+- Verwende jede Element-ID höchstens einmal (kein doppeltes Zuweisen)
+- Der Preis ist typisch die auffälligste Zahl im Produktbereich (oft groß und fett)
 
 Gib NUR ein JSON-Array zurück, kein weiterer Text:
 [{

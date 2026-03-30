@@ -98,20 +98,28 @@ export async function applyProductReplacements(
     const position = edit.position ?? product.position
     const rect = convertBoundingBox(position, pageWidth, pageHeight)
 
-    // Union mit imagePosition damit das Deckweiß auch das Bild abdeckt
-    let coverRect = rect
-    if (product.imagePosition) {
-      const imgCover = convertBoundingBox(product.imagePosition, pageWidth, pageHeight)
-      coverRect = {
-        x: Math.min(rect.x, imgCover.x),
-        y: Math.min(rect.y, imgCover.y),
-        width: Math.max(rect.x + rect.width, imgCover.x + imgCover.width) - Math.min(rect.x, imgCover.x),
-        height: Math.max(rect.y + rect.height, imgCover.y + imgCover.height) - Math.min(rect.y, imgCover.y),
-      }
+    // Alle bekannten Positionen (Textelemente + Bild) in pdf-lib-Koordinaten
+    const allRects = [
+      rect,
+      product.imagePosition ? convertBoundingBox(product.imagePosition, pageWidth, pageHeight) : null,
+      product.nameElement ? convertBoundingBox(product.nameElement.position, pageWidth, pageHeight) : null,
+      product.descriptionElement ? convertBoundingBox(product.descriptionElement.position, pageWidth, pageHeight) : null,
+      product.priceElement ? convertBoundingBox(product.priceElement.position, pageWidth, pageHeight) : null,
+      product.salePriceElement ? convertBoundingBox(product.salePriceElement.position, pageWidth, pageHeight) : null,
+    ].filter((r): r is PdfRect => r !== null)
+
+    // Umschließendes Rechteck aller Positionen
+    const coverRect: PdfRect = {
+      x: Math.min(...allRects.map(r => r.x)),
+      y: Math.min(...allRects.map(r => r.y)),
+      width: 0,
+      height: 0,
     }
+    coverRect.width = Math.max(...allRects.map(r => r.x + r.width)) - coverRect.x
+    coverRect.height = Math.max(...allRects.map(r => r.y + r.height)) - coverRect.y
 
     // 1. Weißes Rechteck über Original
-    const coverMargin = 4
+    const coverMargin = 6
     page.drawRectangle({
       x: coverRect.x - coverMargin,
       y: coverRect.y - coverMargin,
