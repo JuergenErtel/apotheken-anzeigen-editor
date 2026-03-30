@@ -49,7 +49,7 @@ export function UploadContent() {
 
     // 3. Produkte per Claude extrahieren
     setStatus({ type: 'extracting', current: 0, total: pages.length })
-    const extractResult = await extractProducts(sessionId, pages)
+    const extractResult = await extractProducts(sessionId, pages, pdfBlobUrl)
     if (!extractResult.success) {
       setStatus({ type: 'error', message: extractResult.error })
       toast.error(extractResult.error)
