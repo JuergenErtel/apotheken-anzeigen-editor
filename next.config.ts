@@ -1,7 +1,8 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['pdfjs-dist'],
+  // pdfjs-dist darf nicht gebundelt werden — require.resolve() muss echte Dateipfade liefern
+  serverExternalPackages: ['pdfjs-dist'],
   experimental: {
     serverActions: {
       bodySizeLimit: '10mb',
