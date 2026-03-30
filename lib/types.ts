@@ -5,14 +5,36 @@ export interface BoundingBox {
   height: number // % der Seitenhöhe (0–100)
 }
 
+/** Ein einzelnes Textelement aus der PDF-Struktur mit exakten Koordinaten */
+export interface TextElement {
+  text: string
+  position: BoundingBox
+  fontSize: number
+  fontBold: boolean
+  fontItalic: boolean
+  textColor: { r: number; g: number; b: number }
+}
+
 export interface Product {
   id: string
   name: string
   description: string
   price: string
   salePrice?: string
-  position: BoundingBox
+  position: BoundingBox      // Gesamte Produktfläche / Fallback
   pageNumber: number
+
+  // Exakte Textpositionen aus pdfjs-Extraktion
+  nameElement?: TextElement
+  descriptionElement?: TextElement
+  priceElement?: TextElement
+  salePriceElement?: TextElement
+  imagePosition?: BoundingBox  // Claude-Schätzung, durch Textanker präziser
+
+  // Fallback-Felder (bleiben für Rückwärtskompatibilität)
+  textColor?: { r: number; g: number; b: number }
+  fontSize?: number
+  fontBold?: boolean
 }
 
 export interface ProductEdit {
