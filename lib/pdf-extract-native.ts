@@ -64,12 +64,11 @@ export async function extractNativeTextItems(
 ): Promise<NativeTextItem[]> {
   polyfillDOMMatrix()
   const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs')
-  // require.resolve() wird von webpack zur Build-Zeit durch eine Modul-ID (number) ersetzt.
-  // eval('require') erzwingt Runtime-Auflösung → gibt echten Dateipfad zurück.
-  // eslint-disable-next-line no-eval
-  const runtimeRequire = eval('require') as NodeRequire
+  // process.cwd() = /var/task auf Vercel, Projektverzeichnis in Jest.
+  // Vermeidet require.resolve() das von Turbopack/webpack durch Modul-IDs ersetzt wird.
+  const nodePath = require('path') as typeof import('path')
   const { pathToFileURL } = await import('url')
-  const workerPath = runtimeRequire.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs')
+  const workerPath = nodePath.join(process.cwd(), 'node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs')
   pdfjs.GlobalWorkerOptions.workerSrc = pathToFileURL(workerPath).href
 
   const path = require('path')

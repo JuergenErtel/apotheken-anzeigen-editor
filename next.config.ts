@@ -6,6 +6,10 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '10mb',
     },
+    // Stellt sicher dass der pdfjs Worker als physische Datei im Vercel Lambda vorhanden ist
+    outputFileTracingIncludes: {
+      '/**': ['./node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs'],
+    },
   },
   webpack: (config) => {
     config.resolve.alias.canvas = false
