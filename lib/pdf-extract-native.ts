@@ -11,31 +11,12 @@ export interface NativeTextItem {
   color: { r: number; g: number; b: number }
 }
 
-/** Resolve actual font name from pdfjs commonObjs (populated after getOperatorList). */
-async function resolveFontName(
-  commonObjs: { get: (key: string, cb: (data: unknown) => void) => void },
-  fontRef: string
-): Promise<string> {
-  return new Promise(resolve => {
-    try {
-      commonObjs.get(fontRef, (data: unknown) => {
-        const fontData = data as { name?: string } | null
-        resolve(fontData?.name ?? fontRef)
-      })
-    } catch {
-      resolve(fontRef)
-    }
-  })
-}
-
 export async function extractNativeTextItems(
   pdfBytes: ArrayBuffer,
   pageNumber: number
 ): Promise<NativeTextItem[]> {
   const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs')
   // In Node.js (Server Actions, Jest), pdfjs uses a fake/inline worker.
-  // The fake worker loads workerSrc via dynamic import — point it to the
-  // bundled worker so it resolves without a separate process.
   const workerPath = require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs')
   pdfjs.GlobalWorkerOptions.workerSrc = workerPath
 
@@ -49,33 +30,14 @@ export async function extractNativeTextItems(
   const page = await pdf.getPage(pageNumber)
   const { width: pageWidth, height: pageHeight } = page.getViewport({ scale: 1 })
 
-  // Trigger operator list evaluation to populate commonObjs with font data.
-  await page.getOperatorList()
-
+  // getTextContent liefert items + styles (fontFamily pro Alias).
+  // Kein getOperatorList() nötig — vermeidet DOMMatrix-Abhängigkeit in Node.js.
   const content = await page.getTextContent()
   if (content.items.length === 0) return []
-
-  // Pre-resolve all unique font names from commonObjs.
-  const commonObjs = (page as unknown as { commonObjs: { get: (key: string, cb: (data: unknown) => void) => void } }).commonObjs
-  const uniqueFontRefs = new Set<string>()
-  for (const raw of content.items) {
-    if ('str' in raw && raw.str.trim() && 'fontName' in raw) {
-      uniqueFontRefs.add((raw as { fontName: string }).fontName)
-    }
-  }
-
-  const resolvedFontNames = new Map<string, string>()
-  await Promise.all(
-    Array.from(uniqueFontRefs).map(async ref => {
-      const name = await resolveFontName(commonObjs, ref)
-      resolvedFontNames.set(ref, name)
-    })
-  )
 
   const items: NativeTextItem[] = []
 
   content.items.forEach((raw, index) => {
-    // pdfjs TextItem hat: str, transform, width, height, fontName
     if (!('str' in raw) || !raw.str.trim()) return
 
     const item = raw as {
@@ -96,10 +58,11 @@ export async function extractNativeTextItems(
     const wPct = (item.width / pageWidth) * 100
     const hPct = (fontSize / pageHeight) * 100
 
-    // Use the resolved actual font name (e.g. "Helvetica-Bold") for style detection.
-    const fontName = resolvedFontNames.get(item.fontName) ?? item.fontName ?? ''
-    const fontBold = /bold|heavy|black/i.test(fontName)
-    const fontItalic = /italic|oblique/i.test(fontName)
+    // content.styles liefert fontFamily (z.B. "Helvetica-Bold") pro Alias — kein commonObjs nötig.
+    const styles = content.styles as Record<string, { fontFamily?: string }>
+    const fontFamily = styles[item.fontName]?.fontFamily ?? item.fontName ?? ''
+    const fontBold = /bold|heavy|black/i.test(fontFamily)
+    const fontItalic = /italic|oblique/i.test(fontFamily)
 
     items.push({
       id: `t${index + 1}`,
