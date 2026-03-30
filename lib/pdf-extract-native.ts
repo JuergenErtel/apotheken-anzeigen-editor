@@ -71,8 +71,8 @@ export async function extractNativeTextItems(
   const workerPath = nodePath.join(process.cwd(), 'node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs')
   pdfjs.GlobalWorkerOptions.workerSrc = pathToFileURL(workerPath).href
 
-  const path = require('path')
-  const standardFontDataUrl = path.join(require.resolve('pdfjs-dist/package.json'), '..', 'standard_fonts') + '/'
+  // require.resolve() wird von Turbopack durch eine Modul-ID ersetzt — process.cwd() stattdessen verwenden
+  const standardFontDataUrl = nodePath.join(process.cwd(), 'node_modules/pdfjs-dist/standard_fonts') + '/'
   const loadingTask = pdfjs.getDocument({
     data: new Uint8Array(pdfBytes),
     standardFontDataUrl,

@@ -2,9 +2,12 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   transpilePackages: ['pdfjs-dist'],
-  // Stellt sicher dass der pdfjs Worker als physische Datei im Vercel Lambda vorhanden ist
+  // Stellt sicher dass pdfjs-Dateien als physische Dateien im Vercel Lambda vorhanden sind
   outputFileTracingIncludes: {
-    '/**': ['./node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs'],
+    '/**': [
+      './node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs',
+      './node_modules/pdfjs-dist/standard_fonts/**',
+    ],
   },
   experimental: {
     serverActions: {
