@@ -10,6 +10,7 @@ const config: Config = {
     '^@/(.*)$': '<rootDir>/$1',
   },
   testMatch: ['**/__tests__/**/*.test.ts?(x)'],
+  transformIgnorePatterns: ['/node_modules/(?!(pdfjs-dist)/)'],
 }
 
 export default createJestConfig(config)
