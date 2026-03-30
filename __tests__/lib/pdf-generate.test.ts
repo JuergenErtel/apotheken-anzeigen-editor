@@ -1,8 +1,9 @@
 /**
  * @jest-environment node
  */
-import { convertBoundingBox, fitTextInBox } from '@/lib/pdf-generate'
-import type { BoundingBox } from '@/lib/types'
+import { PDFDocument, StandardFonts } from 'pdf-lib'
+import { convertBoundingBox, applyProductReplacements } from '@/lib/pdf-generate'
+import type { BoundingBox, Product, ProductEdit, TextElement } from '@/lib/types'
 
 describe('convertBoundingBox', () => {
   const pageWidth = 595
@@ -11,10 +12,7 @@ describe('convertBoundingBox', () => {
   it('konvertiert % korrekt in PDF-Koordinaten', () => {
     const box: BoundingBox = { x: 10, y: 20, width: 30, height: 15 }
     const result = convertBoundingBox(box, pageWidth, pageHeight)
-
     expect(result.x).toBeCloseTo(59.5)
-    // y von oben: 20%, height: 15% → untere Kante bei 35% von oben
-    // pdf-lib y = von unten: pageHeight * (1 - 0.35) = 842 * 0.65 = 547.3
     expect(result.y).toBeCloseTo(547.3)
     expect(result.width).toBeCloseTo(178.5)
     expect(result.height).toBeCloseTo(126.3)
@@ -30,15 +28,79 @@ describe('convertBoundingBox', () => {
   })
 })
 
-describe('fitTextInBox', () => {
-  it('gibt 12 zurück wenn Text reinpasst', () => {
-    const size = fitTextInBox('Kurzer Text', 200, 50, 12)
-    expect(size).toBe(12)
+describe('applyProductReplacements — TextElement rendering', () => {
+  async function makeMinimalPdf(): Promise<ArrayBuffer> {
+    const doc = await PDFDocument.create()
+    doc.addPage([595, 842])
+    const bytes = await doc.save()
+    return bytes.buffer as ArrayBuffer
+  }
+
+  function makeTextElement(overrides: Partial<TextElement> = {}): TextElement {
+    return {
+      text: 'Ibuprofen 400mg',
+      position: { x: 5, y: 10, width: 40, height: 5 },
+      fontSize: 12,
+      fontBold: false,
+      fontItalic: false,
+      textColor: { r: 0, g: 0, b: 0 },
+      ...overrides,
+    }
+  }
+
+  it('erzeugt ein gültiges PDF wenn TextElements vorhanden sind', async () => {
+    const pdfBytes = await makeMinimalPdf()
+    const product: Product = {
+      id: 'p1',
+      name: 'Ibuprofen 400mg',
+      description: 'Schmerzmittel',
+      price: '€4,99',
+      position: { x: 5, y: 10, width: 40, height: 30 },
+      pageNumber: 1,
+      nameElement: makeTextElement({ fontBold: true }),
+      descriptionElement: makeTextElement({ position: { x: 5, y: 16, width: 40, height: 4 }, fontSize: 10 }),
+      priceElement: makeTextElement({ position: { x: 5, y: 22, width: 20, height: 5 }, fontSize: 14 }),
+    }
+    const edit: ProductEdit = { active: true }
+
+    const result = await applyProductReplacements(pdfBytes, [product], { p1: edit })
+    expect(result).toBeInstanceOf(Uint8Array)
+    expect(result.length).toBeGreaterThan(0)
+
+    // Neues PDF muss ladbar sein
+    const reloaded = await PDFDocument.load(result)
+    expect(reloaded.getPageCount()).toBe(1)
   })
 
-  it('reduziert Schriftgröße wenn Text zu lang', () => {
-    const size = fitTextInBox('Sehr langer Produktname der nicht passt xxxxxxxxxxxxxxxxxx', 100, 20, 14)
-    expect(size).toBeLessThan(14)
-    expect(size).toBeGreaterThan(0)
+  it('erzeugt gültiges PDF ohne TextElements (Fallback)', async () => {
+    const pdfBytes = await makeMinimalPdf()
+    const product: Product = {
+      id: 'p1',
+      name: 'Aspirin',
+      description: 'Tabletten',
+      price: '€3,99',
+      position: { x: 5, y: 10, width: 40, height: 30 },
+      pageNumber: 1,
+      fontSize: 12,
+      fontBold: false,
+    }
+    const edit: ProductEdit = { active: true }
+
+    const result = await applyProductReplacements(pdfBytes, [product], { p1: edit })
+    expect(result).toBeInstanceOf(Uint8Array)
+    const reloaded = await PDFDocument.load(result)
+    expect(reloaded.getPageCount()).toBe(1)
+  })
+
+  it('überspringt inaktive Produkte', async () => {
+    const pdfBytes = await makeMinimalPdf()
+    const product: Product = {
+      id: 'p1', name: 'Test', description: '', price: '€1,00',
+      position: { x: 5, y: 5, width: 20, height: 10 }, pageNumber: 1,
+    }
+    // Kein Fehler, leere Ausgabe-PDF ist trotzdem gültig
+    const result = await applyProductReplacements(pdfBytes, [product], { p1: { active: false } })
+    const reloaded = await PDFDocument.load(result)
+    expect(reloaded.getPageCount()).toBe(1)
   })
 })
