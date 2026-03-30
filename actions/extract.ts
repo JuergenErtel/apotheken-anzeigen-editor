@@ -71,6 +71,7 @@ function buildProduct(
     nameItem && { x: nameItem.x, y: nameItem.y, width: nameItem.width, height: nameItem.height },
     descItem && { x: descItem.x, y: descItem.y, width: descItem.width, height: descItem.height },
     priceItem && { x: priceItem.x, y: priceItem.y, width: priceItem.width, height: priceItem.height },
+    salePriceItem && { x: salePriceItem.x, y: salePriceItem.y, width: salePriceItem.width, height: salePriceItem.height },
   ].filter(Boolean) as { x: number; y: number; width: number; height: number }[]
 
   let position = { x: 0, y: 0, width: 50, height: 30 }
@@ -87,7 +88,7 @@ function buildProduct(
     name: nameItem?.text ?? '',
     description: descItem?.text ?? '',
     price: priceItem?.text ?? '',
-    salePrice: salePriceItem?.text ?? undefined,
+    salePrice: salePriceItem?.text,
     position,
     pageNumber,
     nameElement: nameItem ? toTextElement(nameItem) : undefined,
@@ -107,6 +108,7 @@ export async function extractProducts(
   try {
     // PDF-Bytes laden für native Extraktion
     const pdfResp = await fetch(pdfBlobUrl)
+    if (!pdfResp.ok) throw new Error(`PDF konnte nicht geladen werden (${pdfResp.status})`)
     const pdfBytes = await pdfResp.arrayBuffer()
 
     const allProducts: Product[] = []
@@ -143,8 +145,8 @@ export async function extractProducts(
         const claudeProducts = JSON.parse(cleaned) as ClaudeProduct[]
         const products = claudeProducts.map((cp, i) => buildProduct(cp, itemMap, pageNumber, i))
         allProducts.push(...products)
-      } catch {
-        // Seite ohne erkennbare Produkte — ignorieren
+      } catch (parseErr) {
+        console.warn(`extractProducts: Seite ${pageNumber} — JSON parse fehlgeschlagen:`, parseErr, '\nClaude output:', text)
       }
     }
 
