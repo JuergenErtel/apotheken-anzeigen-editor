@@ -64,9 +64,10 @@ export async function extractNativeTextItems(
 ): Promise<NativeTextItem[]> {
   polyfillDOMMatrix()
   const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs')
-  // In Node.js (Server Actions, Jest), pdfjs uses a fake/inline worker.
+  // pdfjs v5 erwartet eine URL (nicht einen Dateipfad) für workerSrc.
+  const { pathToFileURL } = await import('url')
   const workerPath = require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs')
-  pdfjs.GlobalWorkerOptions.workerSrc = workerPath
+  pdfjs.GlobalWorkerOptions.workerSrc = pathToFileURL(workerPath).href
 
   const path = require('path')
   const standardFontDataUrl = path.join(require.resolve('pdfjs-dist/package.json'), '..', 'standard_fonts') + '/'
