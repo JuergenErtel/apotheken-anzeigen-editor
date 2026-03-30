@@ -106,6 +106,7 @@ export async function extractNativeTextItems(
       fontSize,
       fontBold,
       fontItalic,
+      // Farbextraktion erfolgt in Phase 2 durch Claude (visuelle Erkennung).
       color: { r: 0, g: 0, b: 0 },
     })
   })

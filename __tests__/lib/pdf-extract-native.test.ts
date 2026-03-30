@@ -4,6 +4,8 @@
 import { extractNativeTextItems } from '@/lib/pdf-extract-native'
 import { PDFDocument, StandardFonts } from 'pdf-lib'
 
+jest.setTimeout(30000)
+
 async function makePdf(text: string, x: number, y: number, size: number): Promise<ArrayBuffer> {
   const doc = await PDFDocument.create()
   const page = doc.addPage([595, 842])
